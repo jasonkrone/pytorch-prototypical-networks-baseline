@@ -10,7 +10,7 @@ class PytorchBirdsDataLoader(object):
             batch_size=n_query+n_support,
             episode_length=1,
             episode_width=None,
-            image_dim=(28, 28, 3) # TODO: change this
+            image_dim=(299, 299, 3) # TODO: change this
         )
         self.n_episodes = n_episodes
         self.n_way = n_way

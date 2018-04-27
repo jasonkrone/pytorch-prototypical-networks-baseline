@@ -16,8 +16,13 @@ parser.add_argument('--data.test_query', type=int, default=0, metavar='TESTQUERY
                     help="number of query examples per class in test. 0 means same as model's data.query (default: 0)")
 parser.add_argument('--data.test_episodes', type=int, default=1, metavar='NTEST',
                     help="number of test episodes per epoch (default: 1000)")
-parser.add_argument('--model.x_dim', type=str, default='3,28,28', metavar='XDIM',
-                    help="dimensionality of input images (default: '1,28,28')")
+# added
+default_model_name = 'protonet_inception'
+parser.add_argument('--model.model_name', type=str, default=default_model_name, metavar='MODELNAME',
+                    help="model name (default: {:s})".format(default_model_name))
+parser.add_argument('--model.x_dim', type=str, default='3,299,299', metavar='XDIM',
+                    help="dimensionality of input images (default: '3,299,299')")
+
 args = vars(parser.parse_args())
 
 main(args)

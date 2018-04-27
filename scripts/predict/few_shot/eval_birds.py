@@ -6,17 +6,20 @@ from tqdm import tqdm
 import torch
 import torchnet as tnt
 
+import sys
+sys.path.append("/home/jason/pytorch-inceptionv3")
+
 from protonets.utils import filter_opt, merge_dict
 import protonets.utils.data as data_utils
 import protonets.utils.model as model_utils
 
-import sys
-sys.path.append("/home/jason/pytorch-inceptionv3")
 from data_utils.pytorch_birds_data_loader import PytorchBirdsDataLoader
 
 def main(opt):
     # load model
-    model = torch.load(opt['model.model_path'])
+    #model = torch.load(opt['model.model_path'])
+    print('opt:', opt)
+    model = model_utils.load(opt)
     model.eval()
 
     # load opts

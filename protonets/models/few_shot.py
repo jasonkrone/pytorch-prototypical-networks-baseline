@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision.models as models
 
 from torch.autograd import Variable
 
@@ -82,3 +83,33 @@ def load_protonet_conv(**kwargs):
     )
 
     return Protonet(encoder)
+
+# added for birds dataset
+class FeatureHook(object):
+    def __init__(self, layer):
+        self.hook = layer.register_forward_hook(self.hook_fn)
+        self.feats = None
+
+    def hook_fn(self, module, input, output):
+        self.feats = output
+
+    def remove_hook(self):
+        self.hook.remove()
+
+class InceptionEncoder(object):
+
+    def __init__(self):
+        self.model = models.inception_v3(pretrained=True)
+        for param in self.model.parameters():
+            param.requires_grad = False
+        self.hook = FeatureHook(self.model.Mixed_7c)
+
+    def forward(self, x):
+        self.model(x)
+        return seslf.hook.feats.flatten()
+
+@register_model('protonet_inception')
+def load_protonet_inception(**kwargs):
+    encoder = InceptionEncoder()
+    return Protonet(encoder)
+

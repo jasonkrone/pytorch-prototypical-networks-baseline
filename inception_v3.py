@@ -35,6 +35,7 @@ if __name__ == '__main__':
     batch = data_generator.sample_episode_batch(data_generator.train_data)
     xs, p1s, p2s, ys = batch
     x, p1, p2, y = xs[0], p1s[0], p2s[0], ys[0]
+    # pytorch expects NxCxHxW
     x = np.swapaxes(x, 1, 3)
     print('x shape:', x.shape)
     # flip the x dims so channels come first

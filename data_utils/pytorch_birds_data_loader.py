@@ -10,7 +10,7 @@ class PytorchBirdsDataLoader(object):
             batch_size=n_query+n_support,
             episode_length=1,
             episode_width=None,
-            image_dim=(299, 299, 3)
+            image_dim=(28, 28, 3) # TODO: change this
         )
         self.n_episodes = n_episodes
         self.n_way = n_way
@@ -20,7 +20,7 @@ class PytorchBirdsDataLoader(object):
     def __len__(self):
         return self.n_episodes
 
-    def __iter__():
+    def __iter__(self):
         for i in range(self.n_episodes):
             # TODO: allow some way to select the split
             yield self._sample_episode(self.generator.train_data)
@@ -31,9 +31,9 @@ class PytorchBirdsDataLoader(object):
         # qs: query points, xs: support points N_cxSxCxHxW
         H, W, C = self.generator.image_dim
         # we flip the C indices at the end
-        qs = np.zeros(shape=(self.n_way, self.n_query, C, H, W))
+        xq = np.zeros(shape=(self.n_way, self.n_query, C, H, W))
         xs = np.zeros(shape=(self.n_way, self.n_support, C, H, W))
-        episode = {'qs' : qs, 'xs' : xs}
+        episode = {'xq' : None, 'xs' : None}
         # select the classes
         ys = np.array(dataset.keys())
         y_idxs = np.random.choice(len(ys), self.n_way)
@@ -52,12 +52,14 @@ class PytorchBirdsDataLoader(object):
             # flip channels axis
             img_x = np.swapaxes(img_x, 1, 3)
             q, s  = img_x[:self.n_query, :, :, :], img_x[self.n_query:, :, :, :]
-            qs[i, :, :, :, :], xs[i, :, :, :, :] = q, s
+            xq[i, :, :, :, :], xs[i, :, :, :, :] = q, s
         # TODO: make these torch tensors on the right device
-        episode['qs'] = torch.Tensor(qs)
+        episode['xq'] = torch.Tensor(xq)
         episode['xs'] = torch.Tensor(xs)
         return episode
 
 if __name__ == '__main__':
-    loader = PytorchBirdsDataLoader(10, 5, 6, 7)
-    loader._sample_episode(loader.generator.train_data)
+    loader = PytorchBirdsDataLoader(10, 2, 1, 1)
+    #loader._sample_episode(loader.generator.train_data)
+    #for x in loader:
+    #    print(x)

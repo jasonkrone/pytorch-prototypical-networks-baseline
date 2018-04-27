@@ -30,6 +30,7 @@ class FewshotBirdsDataGenerator(object):
         self.val_data   = self._data_dict_for_split(self.splits['val'])
         print('finished val')
 
+    # uses learning to remember rare events format
     def sample_episode_batch(self, data):
         """Generates a random batch for training or validation.
 
@@ -56,11 +57,10 @@ class FewshotBirdsDataGenerator(object):
             remainder = self.episode_length % self.episode_width
             remainders = [0] * (self.episode_width - remainder) + [1] * remainder
             episode_x = [
-              random.sample(data[lab],
-                            r + (self.episode_length - remainder) // self.episode_width)
+              random.sample(data[lab].keys(), r + (self.episode_length - remainder) // self.episode_width)
               for lab, r in zip(episode_labels, remainders)]
-            episode = sum([[(x, i, ii) for ii, x in enumerate(xx)]
-                         for i, xx in enumerate(episode_x)], [])
+            # modified for dict of dict representation of examples
+            episode = sum([[(data[lab][x], i, ii) for ii, x in enumerate(xx)] for i, (xx, lab) in enumerate(zip(episode_x, episode_labels))], [])
             random.shuffle(episode)
             # Arrange episode so that each distinct label is seen before moving to
             # 2nd showing
@@ -74,6 +74,7 @@ class FewshotBirdsDataGenerator(object):
         return (x, p1, p2, y)
 
     def _data_dict_for_split(self, split, mode='test'):
+        # maps labels to dictionary of img_path - > example configs
         label_to_examples_dict = {}
         with open(split, 'r') as f:
             lines = f.readlines()
@@ -86,10 +87,12 @@ class FewshotBirdsDataGenerator(object):
             y, bbox, parts = int(y), [float(b) for b in bbox], [float(p) for p in parts]
             parts_x, parts_y = parts[0::2], parts[1::2]
             if y not in label_to_examples_dict:
-                label_to_examples_dict[y] = []
+                label_to_examples_dict[y] = {}
             # example is going to be x, p1, p2
             # instead of storing this store args
-            label_to_examples_dict[y].append((image_path, size, bbox, parts_x, parts_y, mode))
+            #label_to_examples_dict[y].append((image_path, size, bbox, parts_x, parts_y, mode))
+            # TODO: test this
+            label_to_examples_dict[y][image_path] = (image_path, size, bbox, parts_x, parts_y, mode)
         return label_to_examples_dict
 
     def _get_examples_for_image_configs(self, configs):
@@ -180,7 +183,7 @@ class FewshotBirdsDataGenerator(object):
             image = imresize(image, size=(new_height, new_width, new_channels))
         image_and_parts = (image, body_crop, head_crop)
         return image_and_parts
-    
+
 if __name__ == '__main__':
     data_generator = FewshotBirdsDataGenerator()
-    xs, ys = data_generator.sample_episode_batch(data_generator.train_data)
+    xs, p1, p2, ys = data_generator.sample_episode_batch(data_generator.train_data)

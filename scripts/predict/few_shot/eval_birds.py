@@ -49,6 +49,12 @@ def main(opt):
         else:
             data_opt[k] = model_opt[v]
 
+    # added for birds dataset
+    data_opt['data.test_way']      = 5
+    data_opt['data.test_shot']     = 5
+    data_opt['data.test_query']    = (41 - 5) # max amount possible
+    data_opt['data.test_episodes'] = 1000 # average over 1000 randomly generated episodes
+
     print("Evaluating {:d}-way, {:d}-shot with {:d} query examples/class over {:d} episodes".format(
         data_opt['data.test_way'], data_opt['data.test_shot'],
         data_opt['data.test_query'], data_opt['data.test_episodes']))
@@ -62,6 +68,8 @@ def main(opt):
     test_shot = data_opt['data.test_shot']
     test_query = data_opt['data.test_query']
     test_episodes = data_opt['data.test_episodes']
+    print('test way:', test_way, 'test shot:', test_shot, 'test query:', test_query, 'test_episodes', test_episodes)
+    # figure out how to go through all the data with 5 shot
     data = PytorchBirdsDataLoader(
         n_episodes=test_episodes,
         n_way=test_way,

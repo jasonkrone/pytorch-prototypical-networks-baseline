@@ -5,7 +5,7 @@ from few_shot_cub_data_generator import FewshotBirdsDataGenerator
 
 class PytorchBirdsDataLoader(object):
 
-    def __init__(self, n_episodes, n_way, n_query, n_support):
+    def __init__(self, n_episodes, n_way, n_query, n_support, mode='train'):
         self.generator = FewshotBirdsDataGenerator(
             batch_size=n_query+n_support,
             episode_length=1,
@@ -16,14 +16,26 @@ class PytorchBirdsDataLoader(object):
         self.n_way = n_way
         self.n_query = n_query
         self.n_support = n_support
+        print('num test classes:', len(self.generator.test_data.keys()))
+        print('examples for each class:')
+        for k in self.generator.test_data:
+            print('k:', k, 'num examples:', len(self.generator.test_data[k].keys()))
+        print('num examples:', sum([len(self.generator.test_data[k].keys()) for k in self.generator.test_data]))
 
     def __len__(self):
         return self.n_episodes
 
     def __iter__(self):
         for i in range(self.n_episodes):
+            data = None
+            if self.mode == 'train':
+                data = self.generator.train_data
+            elif self.mode == 'val':
+                data = self.generator.val_data
+            elif self.mode == 'test':
+                data = self.generator.test_data
             # TODO: allow some way to select the split
-            yield self._sample_episode(self.generator.train_data)
+            yield self._sample_episode(data)
 
     def _sample_episode(self, dataset):
         # dataset is a dictionary of classes where each class

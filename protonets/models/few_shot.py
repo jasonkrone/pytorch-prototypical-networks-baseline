@@ -98,18 +98,34 @@ class FeatureHook(object):
 
 class InceptionEncoder(object):
 
-    def __init__(self):
+    def __init__(self, added_layers=None):
         self.model = models.inception_v3(pretrained=True)
         for param in self.model.parameters():
             param.requires_grad = False
         self.hook = FeatureHook(self.model.Mixed_7c)
+        self.added_layers = added_layers
 
     def forward(self, x):
         self.model(x)
-        return seslf.hook.feats.flatten()
+        feats = self.hook.feats.view(-1, 8*8*2048)
+        if self.added_layers == None:
+            return feats
+        else:
+            return self.added_layers(feats)
 
 @register_model('protonet_inception')
 def load_protonet_inception(**kwargs):
     encoder = InceptionEncoder()
+    return Protonet(encoder)
+
+@register_model('protonet_inception_finetune')
+def load_protonet_inception_finetune(**kwargs):
+    added_layers = nn.Sequential(
+        nn.Conv2d(in_channels=2048, out_channels=128, kernel_size=(1, 1), stride=1),
+        nn.ReLU(),
+        Flatten(),
+        nn.Linear(8*8*128, 200)
+    )
+    encoder = InceptionEncoder(added_layers)
     return Protonet(encoder)
 

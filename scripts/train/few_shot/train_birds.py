@@ -11,7 +11,7 @@ import torch.optim.lr_scheduler as lr_scheduler
 import torchvision
 import torchnet as tnt
 
-from protonets.engine import Engine
+from protonets.engine_birds_finetune import Engine
 
 import protonets.utils.data as data_utils
 import protonets.utils.model as model_utils
@@ -48,8 +48,19 @@ def main(opt):
     #    data = data_utils.load(opt, ['train', 'val'])
     #    train_loader = data['train']
     #    val_loader = data['val']
-    val_loader = None
+    val_loader = 'HACK'
 
+    # added
+    train_way = opt['data.way']
+    train_shot = opt['data.shot']
+    train_query = opt['data.query']
+    train_episodes = opt['data.train_episodes']
+    data = PytorchBirdsDataLoader(
+        n_episodes=train_episodes,
+        n_way=train_way,
+        n_query=train_query,
+        n_support=train_shot
+    )
     model = model_utils.load(opt)
 
     if opt['data.cuda']:
@@ -69,6 +80,7 @@ def main(opt):
     engine.hooks['on_start'] = on_start
 
     def on_start_epoch(state):
+        state['loader'].mode = 'train' # added
         for split, split_meters in meters.items():
             for field, meter in split_meters.items():
                 meter.reset()
@@ -88,8 +100,9 @@ def main(opt):
                 hook_state['wait'] = 0
 
         if val_loader is not None:
+            state['loader'].mode = 'val' # added
             model_utils.evaluate(state['model'],
-                                 val_loader,
+                                 state['loader'],#val_loader,
                                  meters['val'],
                                  desc="Epoch {:d} valid".format(state['epoch']))
 
@@ -106,7 +119,7 @@ def main(opt):
                 print("==> best model (loss = {:0.6f}), saving model...".format(hook_state['best_loss']))
 
                 state['model'].cpu()
-                torch.save(state['model'], os.path.join(opt['log.exp_dir'], 'best_model.t7'))
+                torch.save(state['model'].encoder.added_layers, os.path.join(opt['log.exp_dir'], 'best_model.t7'))
                 if opt['data.cuda']:
                     state['model'].cuda()
 
@@ -119,28 +132,11 @@ def main(opt):
                     state['stop'] = True
         else:
             state['model'].cpu()
-            torch.save(state['model'], os.path.join(opt['log.exp_dir'], 'best_model.t7'))
+            torch.save(state['model'].encoder.added_layers, os.path.join(opt['log.exp_dir'], 'best_model.t7'))
             if opt['data.cuda']:
                 state['model'].cuda()
 
     engine.hooks['on_end_epoch'] = partial(on_end_epoch, { })
-    # imediately save model without doing anything
-    model.cpu()
-    torch.save(model, os.path.join(opt['log.exp_dir'], 'best_model.t7'))
-    print('saved model')
-    assert 0
-
-    # added
-    train_way = opt['data.way']
-    train_shot = opt['data.shot']
-    train_query = opt['data.query']
-    train_episodes = opt['data.train_episodes']
-    data = PytorchBirdsDataLoader(
-        n_episodes=train_episodes,
-        n_way=train_way,
-        n_query=train_query,
-        n_support=train_shot
-    )
 
     engine.train(
         model = model,

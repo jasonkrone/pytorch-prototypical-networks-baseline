@@ -105,11 +105,18 @@ class InceptionEncoder(object):
         self.hook = FeatureHook(self.model.Mixed_7c)
         self.added_layers = added_layers
 
+    def cuda(self):
+        print('called inception encoder cuda')
+        self.model = self.model.cuda()
+        self.added_layers = self.added_layers.cuda()
+
     def forward(self, x):
+        print('type x:', type(x))
+        print('model params:', next(self.model.parameters()).is_cuda)
         self.model(x)
-        feats = self.hook.feats.view(-1, 8*8*2048)
+        feats = self.hook.feats
         if self.added_layers == None:
-            return feats
+            return feats.view(-1, 8*8*2048)
         else:
             return self.added_layers(feats)
 

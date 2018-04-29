@@ -65,6 +65,7 @@ def main(opt):
 
     if opt['data.cuda']:
         model.cuda()
+        model.encoder.cuda()
 
     engine = Engine()
 

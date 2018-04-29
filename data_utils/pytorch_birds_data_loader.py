@@ -66,8 +66,8 @@ class PytorchBirdsDataLoader(object):
             q, s  = img_x[:self.n_query, :, :, :], img_x[self.n_query:, :, :, :]
             xq[i, :, :, :, :], xs[i, :, :, :, :] = q, s
         # TODO: make these torch tensors on the right device
-        episode['xq'] = torch.Tensor(xq)
-        episode['xs'] = torch.Tensor(xs)
+        episode['xq'] = torch.Tensor(xq).cuda() # assume these go on cuda for now
+        episode['xs'] = torch.Tensor(xs).cuda()
         return episode
 
 if __name__ == '__main__':

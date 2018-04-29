@@ -11,6 +11,13 @@ from data_utils.few_shot_cub_data_generator import FewshotBirdsDataGenerator
 
 #INCEPTION_CKPT = 'https://download.pytorch.org/models/inception_v3_google-1a9a5a14.pth'
 
+class Flatten(nn.Module):
+    def __init__(self):
+        super(Flatten, self).__init__()
+
+    def forward(self, x):
+        return x.view(x.size(0), -1)
+
 class FeatureHook(object):
     def __init__(self, layer):
         self.hook = layer.register_forward_hook(self.hook_fn)
@@ -42,5 +49,15 @@ if __name__ == '__main__':
     x, p1, p2, y = [torch.Tensor(i.astype(np.float32)).to(device) for i in [x, p1, p2, y]]
     print('x shape:', x.size())
     inception(x)
-    print(mixed7c.feats.size())
+    feats = mixed7c.feats
+    print('feats shape:', feats.size())
+    added_layers = nn.Sequential(
+        nn.Conv2d(in_channels=2048, out_channels=128, kernel_size=(1, 1), stride=1),
+        nn.ReLU(),
+        Flatten(),
+        nn.Linear(8*8*128, 200)
+    )
+    added_layers = added_layers.to(device)
+    out = added_layers(feats)
+    print('out shape:', out.size())
 

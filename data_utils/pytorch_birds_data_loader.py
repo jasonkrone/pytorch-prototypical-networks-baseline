@@ -5,17 +5,20 @@ from few_shot_cub_data_generator import FewshotBirdsDataGenerator
 
 class PytorchBirdsDataLoader(object):
 
-    def __init__(self, n_episodes, n_way, n_query, n_support, mode='train'):
+    def __init__(self, n_episodes, n_way, n_query, n_support, image_dim=(299, 299, 3), mode='train'):
         self.generator = FewshotBirdsDataGenerator(
             batch_size=n_query+n_support,
             episode_length=1,
             episode_width=None,
-            image_dim=(299, 299, 3) # TODO: change this
+            image_dim=image_dim# TODO: change this
         )
         self.n_episodes = n_episodes
         self.n_way = n_way
         self.n_query = n_query
         self.n_support = n_support
+        # mean and std expected by torch models
+        self.img_mean = np.array([0.485, 0.456, 0.406]).reshape(3, 1, 1)
+        self.img_std  = np.array([0.229, 0.224, 0.225]).reshape(3, 1, 1)
         print('num test classes:', len(self.generator.test_data.keys()))
         print('examples for each class:')
         for k in self.generator.test_data:
@@ -63,6 +66,10 @@ class PytorchBirdsDataLoader(object):
                                      self.generator._get_examples_for_image_configs(x_sample)]
             # flip channels axis
             img_x = np.swapaxes(img_x, 1, 3)
+            img_x = img_x / 255.0 # [0-1] range
+            # normalize images
+            img_x = (img_x - self.img_mean) / self.img_std
+            # split into query and support examples
             q, s  = img_x[:self.n_query, :, :, :], img_x[self.n_query:, :, :, :]
             xq[i, :, :, :, :], xs[i, :, :, :, :] = q, s
         # TODO: make these torch tensors on the right device

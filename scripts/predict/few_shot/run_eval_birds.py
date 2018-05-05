@@ -17,7 +17,7 @@ parser.add_argument('--data.test_query', type=int, default=0, metavar='TESTQUERY
 parser.add_argument('--data.test_episodes', type=int, default=1000, metavar='NTEST',
                     help="number of test episodes per epoch (default: 1000)")
 # added
-default_model_name = 'protonet_inception'
+default_model_name = 'protonet_resnet'
 parser.add_argument('--model.model_name', type=str, default=default_model_name, metavar='MODELNAME',
                     help="model name (default: {:s})".format(default_model_name))
 parser.add_argument('--model.x_dim', type=str, default='3,299,299', metavar='XDIM',

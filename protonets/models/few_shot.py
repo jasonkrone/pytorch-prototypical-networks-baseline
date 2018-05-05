@@ -136,3 +136,37 @@ def load_protonet_inception_finetune(**kwargs):
     encoder = InceptionEncoder(added_layers)
     return Protonet(encoder)
 
+@register_model('protonet_resnet')
+def load_protonet_resnet(**kwargs):
+    encoder = models.resnet18(pretrained=True)
+    # remove the fc and average pooling layers
+    layers = list(encoder.children())[:-2]
+    # should output feature of length 512*7*7 = 25,088
+    layers.extend(Flatten())
+    encoder = nn.Sequential(*layers)
+    # freeze the layers
+    for param in encoder.parameters():
+        param.require_grad = False
+    return Protonet(encoder)
+
+@register_model('protonet_resnet_finetune')
+def load_protonet_resnet_finetune(**kwargs):
+    print('loaded protonet finetune')
+    encoder = models.resnet18(pretrained=True)
+    # extract layers
+    layers  = list(encoder.children())[:-2]
+    # add layers
+    added_layers = [
+        nn.Conv2d(in_channels=512, out_channels=128, kernel_size=(1, 1), stride=1),
+        nn.ReLU(),
+        Flatten(),
+        nn.Linear(7*7*128, 200)
+    ]
+    layers.extend(added_layers)
+    encoder = nn.Sequential(*layers)
+    for name, param in encoder.named_parameters():
+        if name != '8.weight' and name != '8.bias' and \
+           name != '11.weight' and name != '11.bias':
+            param.requires_grad = False
+    # freeze all the layers except for the last two
+    return Protonet(encoder)

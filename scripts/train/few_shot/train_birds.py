@@ -11,7 +11,9 @@ import torch.optim.lr_scheduler as lr_scheduler
 import torchvision
 import torchnet as tnt
 
-from protonets.engine_birds_finetune import Engine
+# used for inception
+#from protonets.engine_birds_finetune import Engine
+from protonets.engine import Engine
 
 import protonets.utils.data as data_utils
 import protonets.utils.model as model_utils
@@ -59,13 +61,14 @@ def main(opt):
         n_episodes=train_episodes,
         n_way=train_way,
         n_query=train_query,
-        n_support=train_shot
+        n_support=train_shot,
+        image_dim=(224, 224, 3)
     )
     model = model_utils.load(opt)
 
     if opt['data.cuda']:
         model.cuda()
-        model.encoder.cuda()
+        #model.encoder.cuda()
 
     engine = Engine()
 
@@ -110,6 +113,8 @@ def main(opt):
         meter_vals = log_utils.extract_meter_values(meters)
         print("Epoch {:02d}: {:s}".format(state['epoch'], log_utils.render_meter_values(meter_vals)))
         meter_vals['epoch'] = state['epoch']
+        # this prevents cuda bugs
+        meter_vals = {k : ({kk : float(vv) for kk, vv in v.items()} if isinstance(v, dict) else v) for k, v in meter_vals.items()}
         with open(trace_file, 'a') as f:
             json.dump(meter_vals, f)
             f.write('\n')
@@ -120,7 +125,9 @@ def main(opt):
                 print("==> best model (loss = {:0.6f}), saving model...".format(hook_state['best_loss']))
 
                 state['model'].cpu()
-                torch.save(state['model'].encoder.added_layers, os.path.join(opt['log.exp_dir'], 'best_model.t7'))
+                # used with inception
+                #torch.save(state['model'].encoder.added_layers, os.path.join(opt['log.exp_dir'], 'best_model.t7'))
+                torch.save(state['model'], os.path.join(opt['log.exp_dir'], 'best_model.t7'))
                 if opt['data.cuda']:
                     state['model'].cuda()
 
@@ -133,7 +140,9 @@ def main(opt):
                     state['stop'] = True
         else:
             state['model'].cpu()
-            torch.save(state['model'].encoder.added_layers, os.path.join(opt['log.exp_dir'], 'best_model.t7'))
+            # used with inception
+            #torch.save(state['model'].encoder.added_layers, os.path.join(opt['log.exp_dir'], 'best_model.t7'))
+            torch.save(state['model'], os.path.join(opt['log.exp_dir'], 'best_model.t7'))
             if opt['data.cuda']:
                 state['model'].cuda()
 

@@ -22,7 +22,10 @@ class Engine(object):
             'stop': False
         }
 
-        state['optimizer'] = state['optim_method'](state['model'].parameters(), **state['optim_config'])
+        # added
+        trainable_parameters = filter(lambda p: p.requires_grad, state['model'].parameters())
+        # state['optimizer'] = state['optim_method'](state['model'].paramaters(), **state['optim_config'])
+        state['optimizer'] = state['optim_method'](trainable_parameters, **state['optim_config'])
 
         self.hooks['on_start'](state)
         while state['epoch'] < state['max_epoch'] and not state['stop']:

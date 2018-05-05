@@ -88,12 +88,34 @@ if __name__ == '__main__':
     else:
         #print('summarizing')
         #summary(model, (3, 224, 224))
+
         # extract features
         layers = list(model.children())[:-2]
+        added_layers = [
+            nn.Conv2d(in_channels=512, out_channels=128, kernel_size=(1, 1), stride=1),
+            nn.ReLU(),
+            Flatten(),
+            nn.Linear(7*7*128, 200)
+        ]
+        layers.extend(added_layers)
+        model = nn.Sequential(*layers).to(device)
+        # loop through named modeules
+
+        #for n in model.named_modules():
+        #    print('module:', n)
+
+        for name, param in model.named_parameters():
+            if name != '8.weight' and name != '8.bias' and name != '11.weight' and name != '11.bias':
+                param.requires_grad = False
+            if name == '6.0.conv2.weight':
+                print param
+            print('name:', name, 'REQUIRES GRAD', param.requires_grad)
+
+        # all these parameters are still trainable
         # new model without the average pooling layer should ouput 512, 7, 7
-        model  = nn.Sequential(*layers)
-        print('layers:', layers)
-        out = model(xs)
-        print('out shape:', out.size())
+        # new model with added layers should output 1, 200
+        # summary(model, (3, 224, 224))
+        #out = model(xs)
+        #print('out shape:', out.size())
 
 

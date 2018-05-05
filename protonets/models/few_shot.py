@@ -111,7 +111,7 @@ class InceptionEncoder(object):
         self.added_layers = self.added_layers.cuda()
 
     def forward(self, x):
-        print('type x:', type(x))
+        print('type x:', type(x), 'size:', x.size())
         print('model params:', next(self.model.parameters()).is_cuda)
         self.model(x)
         feats = self.hook.feats
